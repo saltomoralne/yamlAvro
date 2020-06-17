@@ -1,0 +1,88 @@
+
+buildscript {
+    repositories {
+        mavenLocal()
+        maven { url "https://repo1.maven.org/maven2" }
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        maven {
+            url "https://oss.sonatype.org/content/repositories/releases/"
+        }
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        jcenter()
+    }
+    dependencies {
+        // Updated version can be passed via command line arg as -PopenApiGeneratorVersion=VERSION
+        classpath "org.openapitools:openapi-generator-gradle-plugin:$openApiGeneratorVersion"
+        classpath "com.commercehub.gradle.plugin:gradle-avro-plugin:0.19.1"
+    }
+}
+plugins {
+    id 'java'
+}
+
+apply plugin: "com.commercehub.gradle.plugin.avro"
+apply plugin: 'org.openapi.generator'
+
+apply plugin: "com.commercehub.gradle.plugin.avro-base"
+
+//tasks.register("resolveAvroDependencies", com.commercehub.gradle.plugin.avro.ResolveAvroDependenciesTask) {
+//    source file("src/avro/normalized")
+//    outputDir = file("build/avro/resolved")
+//}
+repositories {
+    jcenter()
+}
+dependencies {
+    compile "org.apache.avro:avro:1.9.2"
+}
+openApiMeta {
+    generatorName = "Sample"
+    packageName = "org.openapitools.example"
+    outputFolder = "$buildDir/meta".toString()
+}
+
+openApiValidate {
+    inputSpec = "$rootDir/petstore-v3.0-invalid.yaml".toString()
+    recommend = true
+}
+
+// Builds a Kotlin client by default.
+openApiGenerate {
+    generatorName = "avro-schema"
+    inputSpec = "$rootDir/petstore-v3.0.yaml".toString()
+    outputDir = "$buildDir/kotlin".toString()
+    apiPackage = "org.openapitools.example.api"
+    invokerPackage = "org.openapitools.example.invoker"
+    modelPackage = "org.openapitools.example.model"
+    configOptions = [
+            dateLibrary: "java8"
+    ]
+    globalProperties = [
+            modelDocs: "false"
+    ]
+    skipValidateSpec = true
+    logToStderr = true
+    generateAliasAsModel = false
+    // set to true and set environment variable {LANG}_POST_PROCESS_FILE
+    // (e.g. SCALA_POST_PROCESS_FILE) to the linter/formatter to be processed.
+    // This command will be passed one file at a time for most supported post processors.
+    enablePostProcessFile = false
+}
+
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+
